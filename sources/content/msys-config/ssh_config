@@ -1,0 +1,4 @@
+Host *
+    Ciphers aes256-ctr,aes192-ctr,aes128-ctr
+    HashKnownHosts yes
+    UseRoaming no

@@ -1,0 +1,46 @@
+Instructions for Packaging and Shipping MozillaBuild
+-----------------------------------------------------------
+
+System Requirements:
+  * 64-bit Windows 7+
+  * Existing MozillaBuild installation
+  * Visual Studio 2017 or newer
+  * Windows 10 SDK (included with Visual Studio installer, just be sure it's installed!)
+  * MSYS2
+    * This must be up-to-date ("pacman -Syu"). If not, you'll get Cygwin DLL errors when
+      the MozillaBuild MSYS2 environment is populated
+
+The packageit.py packaging script is intended to be entirely self-contained. However,
+it's within the realm of possibility of making changes to the host machine it's running
+on, so it's recommended to be run within a VM instead.
+
+Packaging Instructions:
+1. Update the VERSION file, and set a tag in the format MOZILLABUILD_a_b_c_RELEASE.
+
+2. Run ./packageit.py from within a MozillaBuild terminal. The script has built-in defaults
+   which should allow for the entire process to run without any additional arguments. It also
+   supports the following command line arguments if any defaults need to be changed:
+   a) "-s" : Override the path to the MozillaBuild source (default: auto-detected)
+   b) "-o" : Set the path for the staging directory (default: c:\mozillabuild-stage)
+   c) "-v" : Path to the Visual Studio installation (default: auto-detected)
+   d) "-w" : Path to the Windows SDK installation (default: auto-detected)
+
+3. When packaging is completed, there will be a packaged installer in the staging directory.
+
+4. Run a virus scan of the installer through a service like VirusTotal.
+
+5. File a bug blocking the main metabug for the new version for signing the installer. See
+   bug 1458884 for a prior example of this. This signing can be done via a Taskcluster job
+   triggered by RelEng.
+
+6. Use the awscli python package to upload the signed installer to Mozilla's S3 instance
+   (s3://net-mozaws-prod-delivery-archive/pub/mozilla/libraries/win32).
+
+   Also upload newer source packages for any updated packages included in the new release
+   under the src/ sub directory.
+
+   Note that the installer should be uploaded as both a versioned filename
+   (i.e. MozillaBuildSetup-3.2.exe) and as a generic MozillaBuildSetup-Latest.exe.
+
+7. Send an email to the dev-builds, dev-platform, and firefox-dev mailing lists announcing
+   the new release. Also update the wiki page: https://wiki.mozilla.org/MozillaBuild
