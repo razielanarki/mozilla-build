@@ -1,31 +1,67 @@
-!include LogicLib.nsh
-!include WinVer.nsh
-!include x64.nsh
+;----------------------------------------------------------------------------
+; Includes
 
-!include helpers.nsi
+  !include LogicLib.nsh
+  !include WinVer.nsh
+  !include x64.nsh
+  !include helpers.nsi
+  !include MUI2.nsh
 
-!define INSTDIR_DEFAULT "C:\mozilla-build"
-!define NAME "MozillaBuild"
-!define VERSION @VERSION@
+;----------------------------------------------------------------------------
+; Defines
 
-!define OUTFILE "..\${NAME}Setup${VERSION}.exe"
+  !define NAME "MozillaBuild"
+  !define VERSION @VERSION@
+  !define INSTDIR_DEFAULT "C:\mozilla-build"
 
-!define LICENSEDATA "..\license.rtf"
-!define ICON "..\setup.ico"
+  !cd mozilla-build
+  !define DATADIR ".."
 
-!cd mozilla-build
+  !define ICON "${DATADIR}\setup.ico"
+  !define LICENSEDATA "${DATADIR}\license.rtf"
 
-name "${NAME} ${VERSION}"
-RequestExecutionLevel highest
-SetCompressor /SOLID lzma
-OutFile "${OUTFILE}"
-Icon "${ICON}"
-Unicode True
+  !define OUTFILE "${DATADIR}\${NAME}Setup${VERSION}.exe"
 
-LicenseData "${LICENSEDATA}"
-Page license
-Page directory
-Page instfiles
+;----------------------------------------------------------------------------
+; General
+
+  Name "${NAME} ${VERSION}"
+  Icon "${ICON}"
+
+  ManifestSupportedOS Win7
+  ManifestLongPathAware true
+  RequestExecutionLevel highest
+
+  Unicode true
+  SetCompressor /SOLID lzma
+
+  ShowInstDetails show
+  OutFile "${OUTFILE}"
+
+;--------------------------------
+;Interface Settings
+
+  !define MUI_ICON "${ICON}"
+  !define MUI_WELCOMEFINISHPAGE_BITMAP "${DATADIR}\mozillabuild.bmp"
+  !define MUI_FINISHPAGE_NOAUTOCLOSE
+  !define MUI_ABORTWARNING
+
+;--------------------------------
+; Pages
+
+  !insertmacro MUI_PAGE_WELCOME
+  !insertmacro MUI_PAGE_LICENSE "${LICENSEDATA}"
+  !insertmacro MUI_PAGE_DIRECTORY
+  !insertmacro MUI_PAGE_INSTFILES
+  !insertmacro MUI_PAGE_FINISH
+
+;--------------------------------
+;Languages
+
+  !insertmacro MUI_LANGUAGE "English"
+
+;----------------------------------------------------------------------------
+; Check for Win7x64
 
 Function .onInit
 ${IfNot} ${RunningX64}
@@ -43,11 +79,16 @@ ${Else}
 ${EndIf}
 FunctionEnd
 
-Section "MozillaBuild"
+;--------------------------------
+;Installer
+
+Section "Installer"
+  IfSilent continue
   MessageBox MB_YESNO|MB_ICONQUESTION "Previous installations in $INSTDIR will be overwritten (user-created files will be preserved). Do you want to continue?" /SD IDYES IDYES continue
   SetErrors
   return
-  continue:
+
+continue:
   SetOutPath $INSTDIR
   Delete "$INSTDIR\guess-msvc.bat"
   Delete "$INSTDIR\start-l10n.bat"
